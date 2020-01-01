@@ -7,10 +7,10 @@ namespace NOSQLTask.Data
     public class Invoice
     {
         [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
-        public string _id { get; set; }
+        public string InvoiceId { get; set; }
         public string ClientId { get; set; } = string.Empty;
         public List<string> ProductIds { get; set; } = new List<string>();
-        public bool status { get; set; } = default;
+        public bool Status { get; set; } = default;
 
     }
 }

@@ -7,5 +7,7 @@ namespace NOSQLTask.Data
 {
     public class SearchLog
     {
+        public int ClientId { get; set; } = -1;
+        public string SearchBody { get; set; } = string.Empty;
     }
 }

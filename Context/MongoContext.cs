@@ -15,7 +15,7 @@ namespace NOSQLTask.Context
         {
             var client = new MongoClient(settings.Value.MongoConnectionString);
             if (client != null)
-                _database = client.GetDatabase(settings.Value.Database);
+                _database = client.GetDatabase(settings.Value.MongoDatabase);
         }
 
         public IMongoCollection<Invoice> Invoices

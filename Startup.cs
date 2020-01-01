@@ -26,6 +26,31 @@ namespace NOSQLTask
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("CorsPolicy",
+                builder => builder.AllowAnyOrigin()
+                                  .AllowAnyMethod()
+                                  .AllowAnyHeader()
+                                  .AllowCredentials());
+            });
+
+            services.Configure<Settings>(options =>
+            {
+                options.MongoConnectionString = Configuration.GetSection("MongoConnection:ConnectionString").Value;
+                options.MongoDatabase = Configuration.GetSection("MongoConnection:Database").Value;
+
+                options.PostgresConnectionString = Configuration.GetSection("PostgresConnection:ConnectionString").Value;
+
+                options.RedisConnectionString = Configuration.GetSection("RedisConnection:ConnectionString").Value;
+
+                options.Neo4jConnectionUrl = Configuration.GetSection("Neo4jConnection:ConnectionString").Value;
+                options.Neo4jConnectionLogin = Configuration.GetSection("Neo4jConnection:User").Value;
+                options.Neo4jConnectionPassword = Configuration.GetSection("Neo4jConnection:Password").Value;
+
+                options.ElascticConnectionString = Configuration.GetSection("ESConnection:ConnectionString").Value;
+            });
+
             services.AddRazorPages();
             services.AddServerSideBlazor();
         }
@@ -48,6 +73,8 @@ namespace NOSQLTask
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseCors("CorsPolicy");
 
             app.UseEndpoints(endpoints =>
             {
