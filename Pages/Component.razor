@@ -1,0 +1,67 @@
+﻿@page "/"
+
+@using NOSQLTask.Repository
+@using NOSQLTask.Data
+@using System.Linq
+@using System.Collections.Generic
+@inject ICategoryRepository Categories
+@inject IClientRepository Clients
+@inject IInvoiceRepository Invoices
+@inject INeo4jRepository Neo4j
+@inject IProductRepository Products
+@inject IVisitLogRepository Logs
+
+<h3>example</h3>
+
+@code {
+    [Parameter]
+    public Client client { get; set; } = new Client();
+
+    public List<Product> productsV = new List<Product>();
+    public List<Product> productsS = new List<Product>();
+    public List<Product> productsC = new List<Product>();
+
+    public async Task Execute()
+    {
+        //postgres
+        client = await Clients.GetClient(1);
+
+        //neo4j
+        var orders = await Neo4j.GetOrders(client.ClientId);
+
+        //Mongo
+        var paidInvoices = new List<Invoice>();
+
+        foreach (Order order in orders)
+        {
+            var invoice = await Invoices.GetInvoice(order.InvoiceId);
+            if (invoice.Status)
+                paidInvoices.Add(invoice);
+        }
+
+        //var y = await Invoices.GetAllInvoicesByClient(client.ClientId);
+
+        //Продукты из тех же категорий, что и те, которые покупал клиент
+        //Neo4j
+        var neo4jProducts = await Neo4j.GetProducts(paidInvoices.First().InvoiceId);
+        //Redis
+        foreach (var p in neo4jProducts)
+        {
+            var product = await Products.GetProduct(p.ProductId);
+            productsS.Add(product);
+        }
+
+        //Что смотрели вместе с этим продуктом
+        //TODO: Взять ClientId из Mongo где клиенты купили тоже самое
+        //ES
+        var Visited = await Logs.GetAllLogs(1/*client id*/, "ProductId");
+        //Redis
+        foreach (var log in Visited)
+        {
+            var product = await Products.GetProduct(log.ToProduct);
+            productsV.Add(product);
+        }
+
+        //TODO: Что покупали те, кто, смотрел продукт вместе с ним
+    }
+}

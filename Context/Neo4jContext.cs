@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using Neo4j.Driver.V1;
+using Neo4jClient;
+using Neo4jClient.Cypher;
 using NOSQLTask.Data;
 using System;
 using System.Collections.Generic;
@@ -10,40 +12,45 @@ namespace NOSQLTask.Context
 {
     public class Neo4jContext : IDisposable
     {
-        private readonly IDriver _driver;
+        //private readonly IDriver _driver;
+        private readonly GraphClient _client;
 
         public Neo4jContext(IOptions<Settings> settings)
         {
-            _driver = GraphDatabase.Driver(settings.Value.Neo4jConnectionUrl, AuthTokens.Basic(settings.Value.Neo4jConnectionLogin, settings.Value.Neo4jConnectionPassword));
+            //_driver = GraphDatabase.Driver(settings.Value.Neo4jConnectionUrl, AuthTokens.Basic(settings.Value.Neo4jConnectionLogin, settings.Value.Neo4jConnectionPassword));
+            Uri uri = new Uri(settings.Value.Neo4jConnectionUrl);
+            _client = new GraphClient(uri, settings.Value.Neo4jConnectionLogin, settings.Value.Neo4jConnectionPassword);
         }
 
-        public ISession GetSession
+        //public ISession GetSession
+        //{
+        //    get 
+        //    {
+        //        return _driver.Session();
+        //    }
+        //}
+
+        public async Task<bool> Connect()
         {
-            get 
+            if(!_client.IsConnected)
             {
-                return _driver.Session();
+                await _client.ConnectAsync();
             }
+            return _client.IsConnected;
         }
 
-        public void PrintGreeting(string message)
+        public ICypherFluentQuery GetCypher
         {
-            using (var session = _driver.Session())
+            get
             {
-                string greeting = session.WriteTransaction(tx =>
-                {
-                    var result = tx.Run("CREATE (a:Greeting) " +
-                                        "SET a.message = $message " +
-                                        "RETURN a.message + ', from node ' + id(a)",
-                        new { message });
-                    return result.Single()[0].ToString();
-                });
-                Console.WriteLine(greeting);
+                return _client.Cypher;
             }
         }
 
         public void Dispose()
         {
-            _driver?.Dispose();
+            //_driver?.Dispose();
+            _client?.Dispose();
         }
     }
 }

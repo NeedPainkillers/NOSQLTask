@@ -106,16 +106,17 @@ namespace NOSQLTask.Repository
             RedisKey key = new RedisKey().Append(pattern);
 
             //TODO: find maximum id
-            int max = -1;
+            int max = 0;
             foreach (var ep in _context.Connection.GetEndPoints())
             {
                 var server = _context.Connection.GetServer(ep);
                 var keys = server.Keys(database: database.Database, pattern: "Product:[0-9]*[^:]$");
-                max = (from k in keys
-                       let x = Regex.Match(k, @"\d+").Value
-                       select Int32.Parse(x))
-                         .OrderByDescending(m => m)
-                         .FirstOrDefault();
+                if (keys.Any())
+                    max = (from k in keys
+                           let x = Regex.Match(k, @"\d+").Value
+                           select Int32.Parse(x))
+                             .OrderByDescending(m => m)
+                             .FirstOrDefault();
             }
             max++;
             key.Append(max.ToString());

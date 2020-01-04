@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 
 namespace NOSQLTask.Data
 {
-    public class SearchLog
+    public class VisitLog
     {
         public int ClientId { get; set; } = -1;
-        public string SearchBody { get; set; } = string.Empty;
+        public string FromProduct { get; set; } = string.Empty;
+        public string ToProduct { get; set; } = string.Empty;
     }
 }
