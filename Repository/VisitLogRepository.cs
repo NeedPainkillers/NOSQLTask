@@ -11,7 +11,8 @@ namespace NOSQLTask.Repository
 {
     public interface IVisitLogRepository
     {
-        Task<IEnumerable<VisitLog>> GetAllLogs(int ClientId, string ProductId);
+        Task<IEnumerable<VisitLog>> GetLogsFrom(int ClientId, string ProductId);
+        Task<IEnumerable<VisitLog>> GetLogsSameProduct(int ClientId, string ProductId);
         Task<VisitLog> GetLog(string key);
         Task AddLog(VisitLog item);
         Task RemoveLog(string id);
@@ -32,7 +33,7 @@ namespace NOSQLTask.Repository
             var response = await _context.Connection.IndexAsync(item, idx => idx.Index("ContextIdx"));
         }
 
-        public async Task<IEnumerable<VisitLog>> GetAllLogs(int ClientId, string ProductId)
+        public async Task<IEnumerable<VisitLog>> GetLogsFrom(int ClientId, string ProductId)
         {
             var response = await _context.Connection.SearchAsync<VisitLog>(s => s
                         .From(0)
@@ -65,6 +66,23 @@ namespace NOSQLTask.Repository
         public Task UpdateLog(string key, VisitLog item)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<IEnumerable<VisitLog>> GetLogsSameProduct(int ClientId, string ProductId)
+        {
+            var response = await _context.Connection.SearchAsync<VisitLog>(s => s
+            .From(0)
+            .Size(10)
+            .Index("ContextIdx")
+            .Query(q => q
+                .Bool(b => b
+                        .MustNot(bs => bs.Term(t => t.ClientId, ClientId))
+                     ) && q
+                .Match(mq => mq.Field(f => f.ToProduct).Query(ProductId))
+                )
+            );
+
+            return response.Documents;
         }
     }
 }

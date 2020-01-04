@@ -15,6 +15,7 @@ namespace NOSQLTask.Repository
     {
         Task<IEnumerable<Invoice>> GetAllInvoices();
         Task<IEnumerable<Invoice>> GetAllInvoicesByClient(int ClientId);
+        Task<IEnumerable<int>> GetClientsIdByProduct(string ProductId);
         Task<Invoice> GetInvoice(string id);
         Task AddInvoice(Invoice item);
         Task<DeleteResult> RemoveInvoice(string id);
@@ -71,6 +72,18 @@ namespace NOSQLTask.Repository
             return await _context.Invoices
                             .Find(filter)
                             .ToListAsync();
+        }
+
+        public async Task<IEnumerable<int>> GetClientsIdByProduct(string ProductId)
+        {
+            var filter = Builders<Invoice>.Filter.ElemMatch(x => x.ProductIds, x => x.Equals(ProductId));
+
+            var r = await _context.Invoices
+                            .Find(filter)
+                            .ToListAsync();
+
+            return (from item in r 
+                    select item.ClientId).Take(2);
         }
     }
 }

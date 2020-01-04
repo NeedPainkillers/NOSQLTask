@@ -10,7 +10,7 @@ namespace NOSQLTask.Context
 {
     public class PostgresContext
     {
-        string _connString = "Host=host.docker.internal;Username=postgres;Password=sdfl234;Database=taskdb";
+        readonly string _connString = "Host=host.docker.internal;Username=postgres;Password=sdfl234;Database=taskdb";
         //private readonly NpgsqlConnection _conn = null;
 
         public PostgresContext(IOptions<Settings> settings)

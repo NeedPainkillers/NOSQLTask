@@ -83,11 +83,9 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using (var cmd = new NpgsqlCommand("CALL delete_on_clients((@id));", connection))
-            {
-                cmd.Parameters.AddWithValue("id", id);
-                await cmd.ExecuteNonQueryAsync();
-            }
+            await using var cmd = new NpgsqlCommand("CALL delete_on_clients((@id));", connection);
+            cmd.Parameters.AddWithValue("id", id);
+            await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task UpdateClient(int id, Client item)
@@ -97,11 +95,9 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using (var cmd = new NpgsqlCommand(string.Format("CALL update_on_clients((@id), varchar '{0}');", item.Name), connection))
-            {
-                cmd.Parameters.AddWithValue("id", item.ClientId);
-                await cmd.ExecuteNonQueryAsync();
-            }
+            await using var cmd = new NpgsqlCommand(string.Format("CALL update_on_clients((@id), varchar '{0}');", item.Name), connection);
+            cmd.Parameters.AddWithValue("id", item.ClientId);
+            await cmd.ExecuteNonQueryAsync();
         }
     }
 }

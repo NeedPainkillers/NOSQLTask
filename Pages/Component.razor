@@ -17,9 +17,9 @@
     [Parameter]
     public Client client { get; set; } = new Client();
 
-    public List<Product> productsV = new List<Product>();
-    public List<Product> productsS = new List<Product>();
-    public List<Product> productsC = new List<Product>();
+    public List<Product> productsVisitedOthers = new List<Product>();
+    public List<Product> productsSameCategory = new List<Product>();
+    public List<Product> productsBoughtSameVisits = new List<Product>(); 
 
     public async Task Execute()
     {
@@ -48,20 +48,45 @@
         foreach (var p in neo4jProducts)
         {
             var product = await Products.GetProduct(p.ProductId);
-            productsS.Add(product);
+            productsSameCategory.Add(product);
         }
+
 
         //Что смотрели вместе с этим продуктом
         //TODO: Взять ClientId из Mongo где клиенты купили тоже самое
+        var prId = paidInvoices.First().ProductIds.First();
+        //Mongo
+        var ClientsSameProduct = await Invoices.GetClientsIdByProduct(prId); //TODO: Change for loop possibly
+        var clId = ClientsSameProduct.First();
         //ES
-        var Visited = await Logs.GetAllLogs(1/*client id*/, "ProductId");
+        var Visited = await Logs.GetLogsFrom(clId, prId);
         //Redis
         foreach (var log in Visited)
         {
             var product = await Products.GetProduct(log.ToProduct);
-            productsV.Add(product);
+            productsVisitedOthers.Add(product);
         }
 
         //TODO: Что покупали те, кто, смотрел продукт вместе с ним
+        var sameVisits = await Logs.GetLogsSameProduct(client.ClientId, prId);
+        var sv = sameVisits.First().ClientId;
+
+        var ordersSV = await Neo4j.GetOrders(sv);
+
+        //Mongo
+        var paidInvoicesSV = new List<Invoice>();
+
+        foreach (Order order in ordersSV)
+        {
+            var invoice = await Invoices.GetInvoice(order.InvoiceId);
+            if (invoice.Status)
+                paidInvoicesSV.Add(invoice);
+        }
+
+        foreach (var p in paidInvoicesSV.First().ProductIds)
+        {
+            var product = await Products.GetProduct(p);
+            productsBoughtSameVisits.Add(product);
+        }
     }
 }
