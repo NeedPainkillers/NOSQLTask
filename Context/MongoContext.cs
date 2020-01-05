@@ -22,7 +22,7 @@ namespace NOSQLTask.Context
         {
             get
             {
-                return _database.GetCollection<Invoice>("Invoice");
+                return _database.GetCollection<Invoice>("Invoices");
             }
         }
     }
