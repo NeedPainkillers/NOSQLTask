@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NOSQLTask.Data;
+using NOSQLTask.Repository;
 
 namespace NOSQLTask
 {
@@ -26,14 +27,14 @@ namespace NOSQLTask
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options =>
-            {
-                options.AddPolicy("CorsPolicy",
-                builder => builder.AllowAnyOrigin()
-                                  .AllowAnyMethod()
-                                  .AllowAnyHeader()
-                                  .AllowCredentials());
-            });
+            //services.AddCors(options =>
+            //{
+            //    options.AddPolicy("CorsPolicy",
+            //    builder => builder.AllowAnyOrigin()
+            //                      .AllowAnyMethod()
+            //                      .AllowAnyHeader()
+            //                      .AllowCredentials());
+            //});
 
             services.Configure<Settings>(options =>
             {
@@ -53,6 +54,13 @@ namespace NOSQLTask
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
+
+            services.AddSingleton<IInvoiceRepository, InvoiceRepository>();
+            services.AddSingleton<IClientRepository, ClientRepository>();
+            services.AddSingleton<IProductRepository, ProductRepository>();
+            services.AddSingleton<ICategoryRepository, CategoryRepository>();
+            services.AddSingleton<INeo4jRepository, Neo4jRepository>();
+            services.AddSingleton<IVisitLogRepository, VisitLogRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -74,7 +82,7 @@ namespace NOSQLTask
 
             app.UseRouting();
 
-            app.UseCors("CorsPolicy");
+            //app.UseCors("CorsPolicy");
 
             app.UseEndpoints(endpoints =>
             {

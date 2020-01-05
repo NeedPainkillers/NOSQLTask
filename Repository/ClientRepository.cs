@@ -35,7 +35,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand(string.Format("CALL insert_on_clients(text '{0}');", item.Name), connection);
+            await using var cmd = new NpgsqlCommand(string.Format("CALL insert_on_client(text '{0}');", item.Name), connection);
             await cmd.ExecuteNonQueryAsync();
         }
 
@@ -47,7 +47,7 @@ namespace NOSQLTask.Repository
                 await connection.OpenAsync();
 
             List<Client> Response = new List<Client>();
-            await using (var cmd = new NpgsqlCommand("SELECT t.* FROM public.\"clients\" t ORDER BY client_id ASC", connection))
+            await using (var cmd = new NpgsqlCommand("SELECT t.* FROM public.\"client\" t ORDER BY client_id ASC", connection))
             await using (var reader = await cmd.ExecuteReaderAsync())
                 while (await reader.ReadAsync())
                 {
@@ -67,7 +67,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand(String.Format("SELECT t.* FROM public.\"clients\" t WHERE t.client_id = {0}", id), connection);
+            await using var cmd = new NpgsqlCommand(String.Format("SELECT t.* FROM public.\"client\" t WHERE t.client_id = {0}", id), connection);
             await using var reader = await cmd.ExecuteReaderAsync();
             return new Client()
             {
@@ -83,7 +83,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand("CALL delete_on_clients((@id));", connection);
+            await using var cmd = new NpgsqlCommand("CALL delete_on_client((@id));", connection);
             cmd.Parameters.AddWithValue("id", id);
             await cmd.ExecuteNonQueryAsync();
         }
@@ -95,7 +95,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand(string.Format("CALL update_on_clients((@id), varchar '{0}');", item.Name), connection);
+            await using var cmd = new NpgsqlCommand(string.Format("CALL update_on_client((@id), varchar '{0}');", item.Name), connection);
             cmd.Parameters.AddWithValue("id", item.ClientId);
             await cmd.ExecuteNonQueryAsync();
         }

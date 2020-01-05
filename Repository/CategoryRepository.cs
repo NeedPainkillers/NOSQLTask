@@ -34,7 +34,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand(string.Format("CALL insert_on_categories(varchar '{0}', varchar '{0}');", item.Name, item.Description), connection);
+            await using var cmd = new NpgsqlCommand(string.Format("CALL insert_on_category(varchar '{0}', varchar '{0}');", item.Name, item.Description), connection);
             await cmd.ExecuteNonQueryAsync();
         }
 
@@ -46,7 +46,7 @@ namespace NOSQLTask.Repository
                 await connection.OpenAsync();
 
             List<Category> Response = new List<Category>();
-            await using (var cmd = new NpgsqlCommand("SELECT t.* FROM public.\"categories\" t ORDER BY category_id ASC", connection))
+            await using (var cmd = new NpgsqlCommand("SELECT t.* FROM public.\"category\" t ORDER BY category_id ASC", connection))
             await using (var reader = await cmd.ExecuteReaderAsync())
                 while (await reader.ReadAsync())
                 {
@@ -66,7 +66,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand(String.Format("SELECT t.* FROM public.\"categories\" t WHERE t.category_id = {0}", id), connection);
+            await using var cmd = new NpgsqlCommand(String.Format("SELECT t.* FROM public.\"category\" t WHERE t.category_id = {0}", id), connection);
             await using var reader = await cmd.ExecuteReaderAsync();
             return new Category()
             {
@@ -82,7 +82,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand("CALL delete_on_categories((@id));", connection);
+            await using var cmd = new NpgsqlCommand("CALL delete_on_category((@id));", connection);
             cmd.Parameters.AddWithValue("id", id);
             await cmd.ExecuteNonQueryAsync();
         }
@@ -94,7 +94,7 @@ namespace NOSQLTask.Repository
             if (connection.State != System.Data.ConnectionState.Open)
                 await connection.OpenAsync();
 
-            await using var cmd = new NpgsqlCommand(string.Format("CALL update_on_categories((@id), varchar '{0}', varchar '{0}');", item.Name, item.Description), connection);
+            await using var cmd = new NpgsqlCommand(string.Format("CALL update_on_category((@id), varchar '{0}', varchar '{0}');", item.Name, item.Description), connection);
             cmd.Parameters.AddWithValue("id", id);
             await cmd.ExecuteNonQueryAsync();
         }

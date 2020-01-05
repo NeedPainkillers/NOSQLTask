@@ -9,6 +9,7 @@ namespace NOSQLTask.Context
     {
         public RedisContext(IOptions<Settings> settings)
         {
+            //Connection = ConnectionMultiplexer.Connect("host.docker.internal"); //localhost possibly
             Connection = ConnectionMultiplexer.Connect(settings.Value.RedisConnectionString); //localhost possibly
         }
 

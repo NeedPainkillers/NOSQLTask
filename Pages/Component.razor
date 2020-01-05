@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/t"
 
 @using NOSQLTask.Repository
 @using NOSQLTask.Data
@@ -12,6 +12,12 @@
 @inject IVisitLogRepository Logs
 
 <h3>example</h3>
+
+<input type="button" @onclick="Execute" />
+
+@productsBoughtSameVisits
+@productsSameCategory
+@productsVisitedOthers
 
 @code {
     [Parameter]
