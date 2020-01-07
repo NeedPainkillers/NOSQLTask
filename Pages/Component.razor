@@ -35,7 +35,7 @@
             await Clients.AddClient(new Client { Name = i + "Client " + DateTime.Now });
         }
 
-        for (int i = 1000; i < 1010; i++ +)
+        for (int i = 1000; i < 1010; i++ )
         {
             await Products.AddProduct(new Product { ProductId = i.ToString(), Price = i, Quantity = i, Specification = "TEST", Category = "TEST", Type = "TEST" });
         }
