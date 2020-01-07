@@ -12,18 +12,50 @@ namespace NOSQLTask.Repository
     {
         Task<IEnumerable<ProductNeo4j>> GetProducts(string invoiceid);
         Task<IEnumerable<Order>> GetOrders(int ClientId);
-        Task AddData();
+        Task AddData(int ClientId, string ProductId, Category category, string invoiceId, int orderId);
     }
     public class Neo4jRepository : INeo4jRepository
     {
+        private const string ClientFormat = "merge (c:Client:Client {{ClientId:{0}}})";
+        private const string OrderFormat = "merge (o:Order:Order {{OrderId:{0}, InvoiceId: {1}}})";
+        private const string ProductFormat = "merge (p:Product:Product {{ProductId:{0}}})";
+        private const string CategoryId = "merge (ca:Category:Test {{CategoryId: {0}}})";
         private readonly Neo4jContext _context = null;
         public Neo4jRepository(IOptions<Settings> settings)
         {
             _context = new Neo4jContext(settings);
         }
 
-        public Task AddData()
+
+        public async Task AddData(int ClientId, string ProductId, Category category, string invoiceId, int orderId)
         {
+            //TODO:
+            /*
+            merge (c:Client:Client {ClientId:10})
+            merge (o:Order:Order {OrderId:10, InvoiceId: "TEST"})
+            merge (p:Product:Product {ProductId:"1"})
+            merge (ca:Category:Test {CategoryId: 10})
+            merge (c)-[:ORDERED]->(o)
+            merge (o)-[:INCLUDED]->(p)
+            merge (p)-[:TYPE_OF]->(ca)
+            merge (ca)-[:OF_TYPE]->(p)
+            */
+            if (await _context.Connect())
+                await _context.GetCypher
+                     .Merge(string.Format(ClientFormat, ClientId))
+                     .Merge(string.Format(OrderFormat, orderId, invoiceId))
+                     .Merge(string.Format(ProductFormat, ProductId))
+                     .Merge(string.Format(CategoryId, category.CategoryId))
+                     .Merge("merge (c)-[:ORDERED]->(o)")
+                     .Merge("merge (o)-[:INCLUDED]->(p)")
+                     .Merge("merge (p)-[:TYPE_OF]->(ca)")
+                     .Merge("merge (ca)-[:OF_TYPE]->(p)")
+                     .ExecuteWithoutResultsAsync();
+            else
+            {
+                throw new Exception("Connection with Neo4j failed");
+            }
+
             throw new NotImplementedException();
         }
 

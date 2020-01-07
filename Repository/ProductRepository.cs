@@ -83,6 +83,8 @@ namespace NOSQLTask.Repository
             var specs = Task.Run(() => database.StringGetAsync(key + ":specs"));
             var priceS = Task.Run(() => database.StringGetAsync(key + ":price"));
             var quantityS = Task.Run(() => database.StringGetAsync(key + ":quantity"));
+            var type = Task.Run(() => database.StringGetAsync(key + ":type"));
+            var category = Task.Run(() => database.StringGetAsync(key + ":category"));
 
             (await priceS).TryParse(out int price);
             (await quantityS).TryParse(out int quantity);
@@ -92,9 +94,10 @@ namespace NOSQLTask.Repository
                 ProductId = await id,
                 Specification = await specs,
                 Price = price,
-                Quantity = quantity
+                Quantity = quantity,
+                Category = await category,
+                Type = await type
             };
-
 
             return product;
         }
@@ -102,29 +105,30 @@ namespace NOSQLTask.Repository
         public async Task AddProduct(Product item)
         {
             IDatabase database = _context.Connection.GetDatabase();
-            string pattern = "Product:";
+            string pattern = "Product:" + item.ProductId.Trim();
             RedisKey key = new RedisKey().Append(pattern);
 
-            //TODO: find maximum id
-            int max = 0;
-            foreach (var ep in _context.Connection.GetEndPoints())
-            {
-                var server = _context.Connection.GetServer(ep);
-                var keys = server.Keys(database: database.Database, pattern: "Product:[0-9]*[^:]$");
-                if (keys.Any())
-                    max = (from k in keys
-                           let x = Regex.Match(k, @"\d+").Value
-                           select Int32.Parse(x))
-                             .OrderByDescending(m => m)
-                             .FirstOrDefault();
-            }
-            max++;
-            key.Append(max.ToString());
+            //int max = 0;
+            //foreach (var ep in _context.Connection.GetEndPoints())
+            //{
+            //    var server = _context.Connection.GetServer(ep);
+            //    var keys = server.Keys(database: database.Database, pattern: "Product:[0-9]*[^:]$");
+            //    if (keys.Any())
+            //        max = (from k in keys
+            //               let x = Regex.Match(k, @"\d+").Value
+            //               select Int32.Parse(x))
+            //                 .OrderByDescending(m => m)
+            //                 .FirstOrDefault();
+            //}
+            //max++;
+            //key.Append(max.ToString());
 
             await database.StringSetAsync(key, item.ProductId);
             await database.StringSetAsync(key.Append(":price"), item.Price);
             await database.StringSetAsync(key.Append(":quantity"), item.Quantity);
             await database.StringSetAsync(key.Append(":specs"), item.Specification);
+            await database.StringSetAsync(key.Append(":type"), item.Type);
+            await database.StringSetAsync(key.Append(":category"), item.Category);
         }
 
 
