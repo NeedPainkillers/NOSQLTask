@@ -30,7 +30,7 @@ namespace NOSQLTask.Repository
 
         public async Task AddLog(VisitLog item)
         {
-            var response = await _context.Connection.IndexAsync(item, idx => idx.Index("ContextIdx"));
+            var response = await _context.Connection.IndexAsync(item, idx => idx.Index("contextidx"));
         }
 
         public async Task<IEnumerable<VisitLog>> GetLogsFrom(int ClientId, string ProductId)
@@ -38,7 +38,7 @@ namespace NOSQLTask.Repository
             var response = await _context.Connection.SearchAsync<VisitLog>(s => s
                         .From(0)
                         .Size(10)
-                        .Index("ContextIdx")
+                        .Index("contextidx")
                         .Query(q => q
                             .Bool(b => b
                                     .MustNot(bs => bs.Term(t => t.ClientId, ClientId))
@@ -52,7 +52,7 @@ namespace NOSQLTask.Repository
 
         public async Task<VisitLog> GetLog(string key)
         {
-            var response = await _context.Connection.GetAsync<VisitLog>(1, idx => idx.Index("ContextIdx"));
+            var response = await _context.Connection.GetAsync<VisitLog>(1, idx => idx.Index("contextidx"));
             var log = response.Source; // the original document
 
             return log;
@@ -73,7 +73,7 @@ namespace NOSQLTask.Repository
             var response = await _context.Connection.SearchAsync<VisitLog>(s => s
             .From(0)
             .Size(10)
-            .Index("ContextIdx")
+            .Index("contextidx")
             .Query(q => q
                 .Bool(b => b
                         .MustNot(bs => bs.Term(t => t.ClientId, ClientId))

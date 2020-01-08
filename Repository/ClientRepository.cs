@@ -53,7 +53,7 @@ namespace NOSQLTask.Repository
                 {
                     Response.Add(new Client()
                     {
-                        ClientId = Int32.Parse(reader.GetValue(0).ToString()),
+                        ClientId = reader.GetInt32(0),
                         Name = reader.GetValue(1).ToString()
                     });
                 }
@@ -69,9 +69,10 @@ namespace NOSQLTask.Repository
 
             await using var cmd = new NpgsqlCommand(String.Format("SELECT t.* FROM public.\"client\" t WHERE t.client_id = {0}", id), connection);
             await using var reader = await cmd.ExecuteReaderAsync();
+            await reader.ReadAsync();
             return new Client()
             {
-                ClientId = Int32.Parse(reader.GetValue(0).ToString()),
+                ClientId = reader.GetInt32(0),
                 Name = reader.GetValue(1).ToString()
             };
         }

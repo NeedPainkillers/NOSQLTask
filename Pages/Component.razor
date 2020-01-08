@@ -13,8 +13,111 @@
 
 <h3>example</h3>
 
-<input type="button" @onclick="Execute" />
+<input type="button" @onclick="Execute" value="Execute" />
 <input type="button" @onclick="Populate" value="Add test data" />
+
+@if (productsSameCategory == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p>Products from same category</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Specification</th>
+                <th>Category</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < productsSameCategory.Count; i++)
+            {
+                var l = i; //local index
+                <tr>
+                    <td>@productsSameCategory[l].ProductId</td>
+                    <td>@productsSameCategory[l].Type</td>
+                    <td>@productsSameCategory[l].Price</td>
+                    <td>@productsSameCategory[l].Specification</td>
+                    <td>@productsSameCategory[l].Category</td>
+                    <td>@productsSameCategory[l].Quantity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@if (productsBoughtSameVisits == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p>Products bought by others</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Specification</th>
+                <th>Category</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < productsBoughtSameVisits.Count; i++)
+            {
+                var l = i; //local index
+                <tr>
+                    <td>@productsBoughtSameVisits[l].ProductId</td>
+                    <td>@productsBoughtSameVisits[l].Type</td>
+                    <td>@productsBoughtSameVisits[l].Price</td>
+                    <td>@productsBoughtSameVisits[l].Specification</td>
+                    <td>@productsBoughtSameVisits[l].Category</td>
+                    <td>@productsBoughtSameVisits[l].Quantity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@if (productsVisitedOthers == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p>Products visited by others</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Specification</th>
+                <th>Category</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < productsVisitedOthers.Count; i++)
+            {
+                var l = i; //local index
+                <tr>
+                    <td>@productsVisitedOthers[l].ProductId</td>
+                    <td>@productsVisitedOthers[l].Type</td>
+                    <td>@productsVisitedOthers[l].Price</td>
+                    <td>@productsVisitedOthers[l].Specification</td>
+                    <td>@productsVisitedOthers[l].Category</td>
+                    <td>@productsVisitedOthers[l].Quantity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @*@productsBoughtSameVisits
     @productsSameCategory
@@ -35,13 +138,13 @@
             await Clients.AddClient(new Client { Name = i + "Client " + DateTime.Now });
         }
 
-        for (int i = 1000; i < 1010; i++ )
+        for (int i = 1000; i < 1010; i++)
         {
             await Products.AddProduct(new Product { ProductId = i.ToString(), Price = i, Quantity = i, Specification = "TEST", Category = "TEST", Type = "TEST" });
         }
 
         var invoices = new List<Invoice>()
-    {
+{
              new Invoice { ClientId = 1, ProductIds = {"1000", "1001", "1002" }, Status = true },
              new Invoice { ClientId = 1, ProductIds = {"1003", "1004", "1005" }, Status = false },
              new Invoice { ClientId = 2, ProductIds = {"1000", "1006" }, Status = true }
@@ -57,18 +160,19 @@
 
         var x = new Category() { Description = "TEST1", Name = "Electronics" };
         await Categories.AddCategory(x);
+        x.CategoryId = "1";
         var y = new Category() { Description = "TEST2", Name = "Washboards" };
         await Categories.AddCategory(y);
 
+        int i1 = 0;
         foreach (var item in invoices)
         {
-            int i = 0;
+            var l = i1; //not sure about if variable 'i' would work correctly here due to async nature
             foreach (var id in item.ProductIds)
             {
-                var l = i; //not sure about if variable 'i' would work correctly here due to async nature
-                await Neo4j.AddData(1, id, x, item.InvoiceId, l);
-                i++;
+                await Neo4j.AddData(item.ClientId, id, x, item.InvoiceId, l);
             }
+            i1++;
         }
     }
 
@@ -81,8 +185,7 @@
         var orders = await Neo4j.GetOrders(client.ClientId);
 
         //Mongo
-        var paidInvoices = new List<Invoice>
-    ();
+        var paidInvoices = new List<Invoice>();
 
         foreach (Order order in orders)
         {
@@ -103,12 +206,12 @@
             productsSameCategory.Add(product);
         }
 
-
         //Что смотрели вместе с этим продуктом
         var prId = paidInvoices.First().ProductIds.First();
+        prId = "1000";
         //Mongo
         var ClientsSameProduct = await Invoices.GetClientsIdByProduct(prId); //TODO: Change for loop possibly
-        var clId = ClientsSameProduct.First();
+        var clId = ClientsSameProduct.First().ClientId;
         //ES
         var Visited = await Logs.GetLogsFrom(clId, prId);
         //Redis
@@ -117,8 +220,9 @@
             var product = await Products.GetProduct(log.ToProduct);
             productsVisitedOthers.Add(product);
         }
+        productsVisitedOthers = productsVisitedOthers.Distinct(new ProductEqualityComparer()).ToList();
 
-        //TODO: Что покупали те, кто, смотрел продукт вместе с ним
+        //TODO: Что покупали те, кто смотрел продукт вместе с ним
         var sameVisits = await Logs.GetLogsSameProduct(client.ClientId, prId);
         var sv = sameVisits.First().ClientId;
 
@@ -140,5 +244,7 @@
             var product = await Products.GetProduct(p);
             productsBoughtSameVisits.Add(product);
         }
+
+        productsBoughtSameVisits = productsBoughtSameVisits.Distinct(new ProductEqualityComparer()).ToList();
     }
 }

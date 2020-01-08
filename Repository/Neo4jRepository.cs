@@ -16,10 +16,10 @@ namespace NOSQLTask.Repository
     }
     public class Neo4jRepository : INeo4jRepository
     {
-        private const string ClientFormat = "merge (c:Client:Client {{ClientId:{0}}})";
-        private const string OrderFormat = "merge (o:Order:Order {{OrderId:{0}, InvoiceId: {1}}})";
-        private const string ProductFormat = "merge (p:Product:Product {{ProductId:{0}}})";
-        private const string CategoryId = "merge (ca:Category:Test {{CategoryId: {0}}})";
+        private const string ClientFormat = "(c:Client:Client {{ClientId:{0}}})";
+        private const string OrderFormat = "(o:Order:Order {{OrderId:{0}, InvoiceId: '{1}'}})";
+        private const string ProductFormat = "(p:Product:Product {{ProductId:'{0}'}})";
+        private const string CategoryId = "(ca:Category:Test {{CategoryId: {0}}})";
         private readonly Neo4jContext _context = null;
         public Neo4jRepository(IOptions<Settings> settings)
         {
@@ -40,23 +40,22 @@ namespace NOSQLTask.Repository
             merge (p)-[:TYPE_OF]->(ca)
             merge (ca)-[:OF_TYPE]->(p)
             */
+            var x = string.Format(ClientFormat, ClientId);
             if (await _context.Connect())
                 await _context.GetCypher
                      .Merge(string.Format(ClientFormat, ClientId))
                      .Merge(string.Format(OrderFormat, orderId, invoiceId))
                      .Merge(string.Format(ProductFormat, ProductId))
                      .Merge(string.Format(CategoryId, category.CategoryId))
-                     .Merge("merge (c)-[:ORDERED]->(o)")
-                     .Merge("merge (o)-[:INCLUDED]->(p)")
-                     .Merge("merge (p)-[:TYPE_OF]->(ca)")
-                     .Merge("merge (ca)-[:OF_TYPE]->(p)")
+                     .Merge("(c)-[:ORDERED]->(o)")
+                     .Merge("(o)-[:INCLUDED]->(p)")
+                     .Merge("(p)-[:TYPE_OF]->(ca)")
+                     .Merge("(ca)-[:OF_TYPE]->(p)")
                      .ExecuteWithoutResultsAsync();
             else
             {
                 throw new Exception("Connection with Neo4j failed");
             }
-
-            throw new NotImplementedException();
         }
 
         public async Task<IEnumerable<Order>> GetOrders(int ClientId)
@@ -64,7 +63,7 @@ namespace NOSQLTask.Repository
             if (await _context.Connect())
                 return (await _context.GetCypher
                     .Match("(client:Client)--(order:Order)")
-                    .Where((Client client) => client.ClientId.Equals(ClientId))
+                    .Where((Client client) => client.ClientId == ClientId)
                     //.Where(string.Format("client.ClientId = {0}", ClientId))
                     .Return(order => order.As<Order>())
                     .ResultsAsync).Take(10);
@@ -78,12 +77,11 @@ namespace NOSQLTask.Repository
         {
             if (await _context.Connect())
                 return (await _context.GetCypher
-                    .Match("(order:Order)--(product:Products)--(category:Category)--(otherProduct:Products)")
-                    //.Where((Invoice invoice) => invoices.Contains(invoice.InvoiceId))
-                    .Where((Order order) => order.InvoiceId.Equals(InvoiceId))
-                    //.Where(string.Format("order.InvoiceId = {0}", InvoiceId))
-                    .AndWhere("otherProduct.ProductId != product.ProductId")
-                    .Return(product => product.As<ProductNeo4j>())
+                    .Match("(order:Order)--(product:Product)--(category:Category)--(otherProduct:Product)")
+                    .Where((Order order) => order.InvoiceId == InvoiceId)
+                    .With("otherProduct, collect(product) as products")
+                    .Where("not otherProduct in products")
+                    .ReturnDistinct(otherProduct => otherProduct.As<ProductNeo4j>())
                     .ResultsAsync).Take(10);
             else
             {

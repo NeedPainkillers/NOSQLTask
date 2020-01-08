@@ -75,9 +75,11 @@ namespace NOSQLTask.Repository
             return products;
         }
 
-        public async Task<Product> GetProduct(string key)
+        public async Task<Product> GetProduct(string ProductId)
         {
             IDatabase database = _context.Connection.GetDatabase();
+
+            var key = "Product:" + ProductId;
 
             var id = Task.Run(() => database.StringGetAsync(key));
             var specs = Task.Run(() => database.StringGetAsync(key + ":specs"));
