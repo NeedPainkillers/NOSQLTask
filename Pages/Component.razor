@@ -133,10 +133,10 @@ else
 
     public async Task Populate()
     {
-        for (int i = 0; i < 3; i++)
-        {
-            await Clients.AddClient(new Client { Name = i + "Client " + DateTime.Now });
-        }
+        //for (int i = 0; i < 3; i++)
+        //{
+        //    await Clients.AddClient(new Client { Name = i + "Client " + DateTime.Now });
+        //}
 
         for (int i = 1000; i < 1010; i++)
         {
@@ -154,15 +154,15 @@ else
         await Invoices.AddInvoice(invoices[1]); //not paid invoice, what should not appear
         await Invoices.AddInvoice(invoices[2]);
 
-        await Logs.AddLog(new VisitLog() { ClientId = 3, FromProduct = "1000", ToProduct = "1008" });
-        await Logs.AddLog(new VisitLog() { ClientId = 3, FromProduct = "1000", ToProduct = "1009" });
-        await Logs.AddLog(new VisitLog() { ClientId = 2, FromProduct = "1007", ToProduct = "1000" });
+        //await Logs.AddLog(new VisitLog() { ClientId = 3, FromProduct = "1000", ToProduct = "1008" });
+        //await Logs.AddLog(new VisitLog() { ClientId = 3, FromProduct = "1000", ToProduct = "1009" });
+        //await Logs.AddLog(new VisitLog() { ClientId = 2, FromProduct = "1007", ToProduct = "1000" });
 
         var x = new Category() { Description = "TEST1", Name = "Electronics" };
-        await Categories.AddCategory(x);
+        //await Categories.AddCategory(x);
         x.CategoryId = "1";
         var y = new Category() { Description = "TEST2", Name = "Washboards" };
-        await Categories.AddCategory(y);
+        //await Categories.AddCategory(y);
 
         int i1 = 0;
         foreach (var item in invoices)
