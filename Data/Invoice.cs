@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.IdGenerators;
+using System;
 using System.Collections.Generic;
 
 namespace NOSQLTask.Data
@@ -11,6 +12,7 @@ namespace NOSQLTask.Data
         public int ClientId { get; set; } = -1;
         public List<string> ProductIds { get; set; } = new List<string>();
         public bool Status { get; set; } = default;
+        public DateTime Date { get; set; } = DateTime.Now;
 
     }
 }

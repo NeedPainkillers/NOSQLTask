@@ -13,7 +13,7 @@ namespace NOSQLTask.Repository
     {
         Task<IEnumerable<VisitLog>> GetLogsFrom(int ClientId, string ProductId);
         Task<IEnumerable<VisitLog>> GetLogsSameProduct(int ClientId, string ProductId);
-        Task<VisitLog> GetLog(string key);
+        Task<IEnumerable<VisitLog>> GetLogs(int ClientId);
         Task AddLog(VisitLog item);
         Task RemoveLog(string id);
         Task UpdateLog(string key, VisitLog item);
@@ -50,12 +50,19 @@ namespace NOSQLTask.Repository
             return response.Documents;
         }
 
-        public async Task<VisitLog> GetLog(string key)
+        public async Task<IEnumerable<VisitLog>> GetLogs(int ClientId)
         {
-            var response = await _context.Connection.GetAsync<VisitLog>(1, idx => idx.Index("contextidx"));
-            var log = response.Source; // the original document
+            var response = await _context.Connection.SearchAsync<VisitLog>(s => s
+                        .From(0)
+                        .Size(10)
+                        .Index("contextidx")
+                        .Query(q => q
+                            .Term(t => t.ClientId, ClientId)
+                            )
+                        );
+            var logs = response.Documents;
 
-            return log;
+            return logs;
         }
 
         public Task RemoveLog(string id)

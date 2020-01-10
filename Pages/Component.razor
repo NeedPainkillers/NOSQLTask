@@ -207,30 +207,45 @@ else
         }
 
         //Что смотрели вместе с этим продуктом
-        var prId = paidInvoices.First().ProductIds.First();
-        prId = "1000";
-        //Mongo
-        var ClientsSameProduct = await Invoices.GetClientsIdByProduct(prId); //TODO: Change for loop possibly
-        var clId = ClientsSameProduct.First().ClientId;
-        //ES
-        var Visited = await Logs.GetLogsFrom(clId, prId);
-        //Redis
-        foreach (var log in Visited)
+        var productIds = new List<string>();
+
+        foreach (var invoice1 in paidInvoices.OrderByDescending(x => x.Date).Take(2))
         {
-            var product = await Products.GetProduct(log.ToProduct);
-            productsVisitedOthers.Add(product);
+            foreach (var productId in invoice1.ProductIds.Take(5))
+            {
+                productIds.Add(productId);
+                var ClientsSameProduct = await Invoices.GetClientsIdByProduct(productId);
+                foreach (var clientId in ClientsSameProduct.Take(2))
+                {
+                    var Visited = await Logs.GetLogsFrom(clientId.ClientId, productId);
+                    foreach (var log in Visited)
+                    {
+                        var product = await Products.GetProduct(log.ToProduct);
+                        productsVisitedOthers.Add(product);
+                    }
+                }
+            }
         }
+
         productsVisitedOthers = productsVisitedOthers.Distinct(new ProductEqualityComparer()).ToList();
 
-        //TODO: Что покупали те, кто смотрел продукт вместе с ним
-        var sameVisits = await Logs.GetLogsSameProduct(client.ClientId, prId);
-        var sv = sameVisits.First().ClientId;
+        //Что покупали те, кто смотрел продукт вместе с ним
 
-        var ordersSV = await Neo4j.GetOrders(sv);
+        List<Order> ordersSV = new List<Order>();
 
-        //Mongo
-        var paidInvoicesSV = new List<Invoice>
-            ();
+        foreach (var productId in productIds)
+        {
+            var sameVisits = await Logs.GetLogsSameProduct(client.ClientId, productId);
+            var sv = sameVisits.First().ClientId;
+            foreach (var log in sameVisits)
+            {
+                var ordersSVR = await Neo4j.GetOrders(log.ClientId);
+                ordersSV = ordersSVR.ToList();
+            }
+
+        }
+
+        var paidInvoicesSV = new List<Invoice>();
 
         foreach (Order order in ordersSV)
         {
@@ -239,10 +254,13 @@ else
                 paidInvoicesSV.Add(invoice);
         }
 
-        foreach (var p in paidInvoicesSV.First().ProductIds)
+        foreach (var invoice2 in paidInvoicesSV.OrderByDescending(x => x.Date).Take(2))
         {
-            var product = await Products.GetProduct(p);
-            productsBoughtSameVisits.Add(product);
+            foreach (var p in invoice2.ProductIds)
+            {
+                var product = await Products.GetProduct(p);
+                productsBoughtSameVisits.Add(product);
+            }
         }
 
         productsBoughtSameVisits = productsBoughtSameVisits.Distinct(new ProductEqualityComparer()).ToList();
