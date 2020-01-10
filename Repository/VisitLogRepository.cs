@@ -37,7 +37,7 @@ namespace NOSQLTask.Repository
         {
             var response = await _context.Connection.SearchAsync<VisitLog>(s => s
                         .From(0)
-                        .Size(10)
+                        .Size(1000)
                         .Index("contextidx")
                         .Query(q => q
                             .Bool(b => b
@@ -54,7 +54,7 @@ namespace NOSQLTask.Repository
         {
             var response = await _context.Connection.SearchAsync<VisitLog>(s => s
                         .From(0)
-                        .Size(10)
+                        .Size(1000)
                         .Index("contextidx")
                         .Query(q => q
                             .Term(t => t.ClientId, ClientId)
@@ -79,7 +79,7 @@ namespace NOSQLTask.Repository
         {
             var response = await _context.Connection.SearchAsync<VisitLog>(s => s
             .From(0)
-            .Size(10)
+            .Size(1000)
             .Index("contextidx")
             .Query(q => q
                 .Bool(b => b

@@ -20,6 +20,7 @@ namespace NOSQLTask.Repository
         private const string OrderFormat = "(o:Order:Order {{OrderId:{0}, InvoiceId: '{1}'}})";
         private const string ProductFormat = "(p:Product:Product {{ProductId:'{0}'}})";
         private const string CategoryId = "(ca:Category:Test {{CategoryId: {0}}})";
+
         private readonly Neo4jContext _context = null;
         public Neo4jRepository(IOptions<Settings> settings)
         {
@@ -29,17 +30,6 @@ namespace NOSQLTask.Repository
 
         public async Task AddData(int ClientId, string ProductId, Category category, string invoiceId, int orderId)
         {
-            //TODO:
-            /*
-            merge (c:Client:Client {ClientId:10})
-            merge (o:Order:Order {OrderId:10, InvoiceId: "TEST"})
-            merge (p:Product:Product {ProductId:"1"})
-            merge (ca:Category:Test {CategoryId: 10})
-            merge (c)-[:ORDERED]->(o)
-            merge (o)-[:INCLUDED]->(p)
-            merge (p)-[:TYPE_OF]->(ca)
-            merge (ca)-[:OF_TYPE]->(p)
-            */
             var x = string.Format(ClientFormat, ClientId);
             if (await _context.Connect())
                 await _context.GetCypher

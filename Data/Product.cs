@@ -17,6 +17,7 @@ namespace NOSQLTask.Data
         public int Quantity { get; set; } = -1;
         public int Price { get; set; } = -1;
     }
+
     class ProductEqualityComparer : IEqualityComparer<Product>
     {
         public bool Equals(Product p1, Product p2)

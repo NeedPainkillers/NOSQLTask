@@ -13,6 +13,8 @@
 
 <h3>example</h3>
 
+<input type="text" name="ClientId" @bind="ClientId" />
+
 <input type="button" @onclick="Execute" value="Execute" />
 <input type="button" @onclick="Populate" value="Add test data" />
 
@@ -125,6 +127,7 @@ else
 
 @code {
     [Parameter]
+    public int ClientId { get; set; } = 1;
     public Client client { get; set; } = new Client();
 
     public List<Product> productsVisitedOthers = new List<Product>();
@@ -138,25 +141,34 @@ else
         //    await Clients.AddClient(new Client { Name = i + "Client " + DateTime.Now });
         //}
 
-        for (int i = 1000; i < 1010; i++)
+        for (int i = 1000; i < 1020; i++)
         {
             await Products.AddProduct(new Product { ProductId = i.ToString(), Price = i, Quantity = i, Specification = "TEST", Category = "TEST", Type = "TEST" });
         }
 
-        var invoices = new List<Invoice>()
-{
-             new Invoice { ClientId = 1, ProductIds = {"1000", "1001", "1002" }, Status = true },
-             new Invoice { ClientId = 1, ProductIds = {"1003", "1004", "1005" }, Status = false },
-             new Invoice { ClientId = 2, ProductIds = {"1000", "1006" }, Status = true }
-        };
+        //        var invoices = new List<Invoice>()
+        //{
+        //             new Invoice { ClientId = 1, ProductIds = {"1000", "1001", "1002" }, Status = true },
+        //             new Invoice { ClientId = 1, ProductIds = {"1003", "1004", "1005" }, Status = false },
+        //             new Invoice { ClientId = 2, ProductIds = {"1000", "1006" }, Status = true },
+        //             new Invoice { ClientId = 4, ProductIds = {"1000", "1011", "1013" }, Status = true }
+        //        };
 
-        await Invoices.AddInvoice(invoices[0]);
-        await Invoices.AddInvoice(invoices[1]); //not paid invoice, what should not appear
-        await Invoices.AddInvoice(invoices[2]);
+        //        await Invoices.AddInvoice(invoices[0]);
+        //        await Invoices.AddInvoice(invoices[1]); //not paid invoice, what should not appear
+        //        await Invoices.AddInvoice(invoices[2]);
+        //        await Invoices.AddInvoice(invoices[3]);
 
         //await Logs.AddLog(new VisitLog() { ClientId = 3, FromProduct = "1000", ToProduct = "1008" });
         //await Logs.AddLog(new VisitLog() { ClientId = 3, FromProduct = "1000", ToProduct = "1009" });
         //await Logs.AddLog(new VisitLog() { ClientId = 2, FromProduct = "1007", ToProduct = "1000" });
+
+        //await Logs.AddLog(new VisitLog() { ClientId = 1, FromProduct = "1016", ToProduct = "1003" });
+        //await Logs.AddLog(new VisitLog() { ClientId = 1, FromProduct = "1000", ToProduct = "1015" });
+        //await Logs.AddLog(new VisitLog() { ClientId = 2, FromProduct = "1001", ToProduct = "1010" });
+        //await Logs.AddLog(new VisitLog() { ClientId = 4, FromProduct = "1002", ToProduct = "1019" });
+        await Logs.AddLog(new VisitLog() { ClientId = 4, FromProduct = "1018", ToProduct = "1002" });
+
 
         var x = new Category() { Description = "TEST1", Name = "Electronics" };
         //await Categories.AddCategory(x);
@@ -164,25 +176,32 @@ else
         var y = new Category() { Description = "TEST2", Name = "Washboards" };
         //await Categories.AddCategory(y);
 
-        int i1 = 0;
-        foreach (var item in invoices)
-        {
-            var l = i1; //not sure about if variable 'i' would work correctly here due to async nature
-            foreach (var id in item.ProductIds)
-            {
-                await Neo4j.AddData(item.ClientId, id, x, item.InvoiceId, l);
-            }
-            i1++;
-        }
+        //int i1 = 0;
+        //foreach (var item in invoices)
+        //{
+        //    var l = i1; //not sure about if variable 'i' would work correctly here due to async nature
+        //    foreach (var id in item.ProductIds)
+        //    {
+        //        await Neo4j.AddData(item.ClientId, id, x, item.InvoiceId, l);
+        //    }
+        //    i1++;
+        //}
     }
 
     public async Task Execute()
     {
+        productsVisitedOthers.Clear();
+        productsSameCategory.Clear();
+        productsBoughtSameVisits.Clear();
+
         //postgres
-        client = await Clients.GetClient(1);
+        client = await Clients.GetClient(ClientId);
 
         //neo4j
         var orders = await Neo4j.GetOrders(client.ClientId);
+
+        if (!orders.Any())
+            return;
 
         //Mongo
         var paidInvoices = new List<Invoice>();
@@ -193,6 +212,9 @@ else
             if (invoice.Status)
                 paidInvoices.Add(invoice);
         }
+
+        if (!paidInvoices.Any())
+            return;
 
         //var y = await Invoices.GetAllInvoicesByClient(client.ClientId);
 
@@ -206,6 +228,8 @@ else
             productsSameCategory.Add(product);
         }
 
+        productsSameCategory = productsSameCategory.Distinct(new ProductEqualityComparer()).ToList();
+
         //Что смотрели вместе с этим продуктом
         var productIds = new List<string>();
 
@@ -215,9 +239,9 @@ else
             {
                 productIds.Add(productId);
                 var ClientsSameProduct = await Invoices.GetClientsIdByProduct(productId);
-                foreach (var clientId in ClientsSameProduct.Take(2))
+                foreach (var clientId in ClientsSameProduct.Where(x => x.ClientId != client.ClientId).Take(2))
                 {
-                    var Visited = await Logs.GetLogsFrom(clientId.ClientId, productId);
+                    var Visited = await Logs.GetLogs(clientId.ClientId);
                     foreach (var log in Visited)
                     {
                         var product = await Products.GetProduct(log.ToProduct);
@@ -236,13 +260,13 @@ else
         foreach (var productId in productIds)
         {
             var sameVisits = await Logs.GetLogsSameProduct(client.ClientId, productId);
-            var sv = sameVisits.First().ClientId;
+            if (sameVisits.Any())
+                sameVisits = sameVisits.Distinct(new VisitLogEqualityComparer()); //reduce duplicate Clients
             foreach (var log in sameVisits)
             {
                 var ordersSVR = await Neo4j.GetOrders(log.ClientId);
-                ordersSV = ordersSVR.ToList();
+                ordersSV.AddRange(ordersSVR);
             }
-
         }
 
         var paidInvoicesSV = new List<Invoice>();

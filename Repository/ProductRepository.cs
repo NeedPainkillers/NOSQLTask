@@ -53,6 +53,8 @@ namespace NOSQLTask.Repository
                     var specs = Task.Run(() => database.StringGetAsync(keyS + ":specs"));
                     var priceS = Task.Run(() => database.StringGetAsync(keyS + ":price"));
                     var quantityS = Task.Run(() => database.StringGetAsync(keyS + ":quantity"));
+                    var type = Task.Run(() => database.StringGetAsync(key + ":type"));
+                    var category = Task.Run(() => database.StringGetAsync(key + ":category"));
 
                     if (!(await priceS).TryParse(out int price))
                         price = -1;
@@ -64,7 +66,9 @@ namespace NOSQLTask.Repository
                         ProductId = await id,
                         Specification = await specs,
                         Price = price,
-                        Quantity = quantity
+                        Quantity = quantity,
+                        Category = await category,
+                        Type = await type
                     };
 
                     products.Add(product);
@@ -109,21 +113,6 @@ namespace NOSQLTask.Repository
             IDatabase database = _context.Connection.GetDatabase();
             string pattern = "Product:" + item.ProductId.Trim();
             RedisKey key = new RedisKey().Append(pattern);
-
-            //int max = 0;
-            //foreach (var ep in _context.Connection.GetEndPoints())
-            //{
-            //    var server = _context.Connection.GetServer(ep);
-            //    var keys = server.Keys(database: database.Database, pattern: "Product:[0-9]*[^:]$");
-            //    if (keys.Any())
-            //        max = (from k in keys
-            //               let x = Regex.Match(k, @"\d+").Value
-            //               select Int32.Parse(x))
-            //                 .OrderByDescending(m => m)
-            //                 .FirstOrDefault();
-            //}
-            //max++;
-            //key.Append(max.ToString());
 
             await database.StringSetAsync(key, item.ProductId);
             await database.StringSetAsync(key.Append(":price"), item.Price);
