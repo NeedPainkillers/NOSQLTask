@@ -41,14 +41,14 @@ else
             @for (int i = 0; i < productsSameCategory.Count; i++)
             {
                 var l = i; //local index
-                <tr>
-                    <td>@productsSameCategory[l].ProductId</td>
-                    <td>@productsSameCategory[l].Type</td>
-                    <td>@productsSameCategory[l].Price</td>
-                    <td>@productsSameCategory[l].Specification</td>
-                    <td>@productsSameCategory[l].Category</td>
-                    <td>@productsSameCategory[l].Quantity</td>
-                </tr>
+            <tr>
+                <td>@productsSameCategory[l].ProductId</td>
+                <td>@productsSameCategory[l].Type</td>
+                <td>@productsSameCategory[l].Price</td>
+                <td>@productsSameCategory[l].Specification</td>
+                <td>@categories.Where(x => x.CategoryId.Equals(productsSameCategory[l].Category)).FirstOrDefault().Name</td>
+                <td>@productsSameCategory[l].Quantity</td>
+            </tr>
             }
         </tbody>
     </table>
@@ -75,14 +75,14 @@ else
             @for (int i = 0; i < productsBoughtSameVisits.Count; i++)
             {
                 var l = i; //local index
-                <tr>
-                    <td>@productsBoughtSameVisits[l].ProductId</td>
-                    <td>@productsBoughtSameVisits[l].Type</td>
-                    <td>@productsBoughtSameVisits[l].Price</td>
-                    <td>@productsBoughtSameVisits[l].Specification</td>
-                    <td>@productsBoughtSameVisits[l].Category</td>
-                    <td>@productsBoughtSameVisits[l].Quantity</td>
-                </tr>
+            <tr>
+                <td>@productsBoughtSameVisits[l].ProductId</td>
+                <td>@productsBoughtSameVisits[l].Type</td>
+                <td>@productsBoughtSameVisits[l].Price</td>
+                <td>@productsBoughtSameVisits[l].Specification</td>
+                <td>@categories.Where(x => x.CategoryId.Equals(productsBoughtSameVisits[l].Category)).FirstOrDefault().Name</td>
+                <td>@productsBoughtSameVisits[l].Quantity</td>
+            </tr>
             }
         </tbody>
     </table>
@@ -114,7 +114,7 @@ else
                     <td>@productsVisitedOthers[l].Type</td>
                     <td>@productsVisitedOthers[l].Price</td>
                     <td>@productsVisitedOthers[l].Specification</td>
-                    <td>@categories.Select(x => x.CategoryId.Equals(productsVisitedOthers[l].Category)).FirstOrDefault()</td>
+                    <td>@categories.Where(x => x.CategoryId.Equals(productsVisitedOthers[l].Category)).FirstOrDefault().Name</td>
                     <td>@productsVisitedOthers[l].Quantity</td>
                 </tr>
             }
@@ -130,7 +130,7 @@ else
     [Parameter]
     public int ClientId { get; set; } = 1;
     [Parameter]
-    public List<Category> categories { get; set; };
+    public List<Category> categories { get; set; } = new List<Category>();
     public Client client { get; set; } = new Client();
 
     public List<Product> productsVisitedOthers = new List<Product>();
@@ -301,7 +301,7 @@ else
         foreach (var item in categoryIds)
         {
             if(Int32.TryParse(item, out int id))
-                categories = Categories.GetCategory(id);
+                categories.Add(await Categories.GetCategory(id));
         }
     }
 }

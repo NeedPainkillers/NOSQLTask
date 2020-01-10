@@ -68,6 +68,7 @@ namespace NOSQLTask.Repository
 
             await using var cmd = new NpgsqlCommand(String.Format("SELECT t.* FROM public.\"category\" t WHERE t.category_id = {0}", id), connection);
             await using var reader = await cmd.ExecuteReaderAsync();
+            await reader.ReadAsync();
             return new Category()
             {
                 CategoryId = reader.GetValue(0).ToString(),
