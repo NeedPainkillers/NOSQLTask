@@ -53,8 +53,8 @@ namespace NOSQLTask.Repository
                     var specs = Task.Run(() => database.StringGetAsync(keyS + ":specs"));
                     var priceS = Task.Run(() => database.StringGetAsync(keyS + ":price"));
                     var quantityS = Task.Run(() => database.StringGetAsync(keyS + ":quantity"));
-                    var type = Task.Run(() => database.StringGetAsync(key + ":type"));
-                    var category = Task.Run(() => database.StringGetAsync(key + ":category"));
+                    var type = Task.Run(() => database.StringGetAsync(keyS + ":type"));
+                    var category = Task.Run(() => database.StringGetAsync(keyS + ":category"));
 
                     if (!(await priceS).TryParse(out int price))
                         price = -1;

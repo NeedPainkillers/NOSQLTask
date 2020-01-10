@@ -19,7 +19,6 @@ namespace NOSQLTask.Repository
     }
     public class ClientRepository : IClientRepository
     {
-        //TODO: postgres function needs to be created
         private readonly PostgresContext _context = null;
 
         public ClientRepository(IOptions<Settings> settings)

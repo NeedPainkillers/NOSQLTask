@@ -18,6 +18,7 @@
 <input type="button" @onclick="Execute" value="Execute" />
 <input type="button" @onclick="Populate" value="Add test data" />
 
+<p>Offers for @client.Name</p>
 @if (productsSameCategory == null)
 {
     <p><em>Loading...</em></p>
@@ -113,7 +114,7 @@ else
                     <td>@productsVisitedOthers[l].Type</td>
                     <td>@productsVisitedOthers[l].Price</td>
                     <td>@productsVisitedOthers[l].Specification</td>
-                    <td>@productsVisitedOthers[l].Category</td>
+                    <td>@categories.Select(x => x.CategoryId.Equals(productsVisitedOthers[l].Category)).FirstOrDefault()</td>
                     <td>@productsVisitedOthers[l].Quantity</td>
                 </tr>
             }
@@ -128,6 +129,8 @@ else
 @code {
     [Parameter]
     public int ClientId { get; set; } = 1;
+    [Parameter]
+    public List<Category> categories { get; set; };
     public Client client { get; set; } = new Client();
 
     public List<Product> productsVisitedOthers = new List<Product>();
@@ -143,7 +146,7 @@ else
 
         for (int i = 1000; i < 1020; i++)
         {
-            await Products.AddProduct(new Product { ProductId = i.ToString(), Price = i, Quantity = i, Specification = "TEST", Category = "TEST", Type = "TEST" });
+            await Products.AddProduct(new Product { ProductId = i.ToString(), Price = i, Quantity = i, Specification = "TEST", Category = "1", Type = "TEST" });
         }
 
         //        var invoices = new List<Invoice>()
@@ -167,13 +170,13 @@ else
         //await Logs.AddLog(new VisitLog() { ClientId = 1, FromProduct = "1000", ToProduct = "1015" });
         //await Logs.AddLog(new VisitLog() { ClientId = 2, FromProduct = "1001", ToProduct = "1010" });
         //await Logs.AddLog(new VisitLog() { ClientId = 4, FromProduct = "1002", ToProduct = "1019" });
-        await Logs.AddLog(new VisitLog() { ClientId = 4, FromProduct = "1018", ToProduct = "1002" });
+        //await Logs.AddLog(new VisitLog() { ClientId = 4, FromProduct = "1018", ToProduct = "1002" });
 
 
-        var x = new Category() { Description = "TEST1", Name = "Electronics" };
+        //var x = new Category() { Description = "TEST1", Name = "Electronics" };
         //await Categories.AddCategory(x);
-        x.CategoryId = "1";
-        var y = new Category() { Description = "TEST2", Name = "Washboards" };
+        //x.CategoryId = "1";
+        //var y = new Category() { Description = "TEST2", Name = "Washboards" };
         //await Categories.AddCategory(y);
 
         //int i1 = 0;
@@ -216,7 +219,6 @@ else
         if (!paidInvoices.Any())
             return;
 
-        //var y = await Invoices.GetAllInvoicesByClient(client.ClientId);
 
         //Продукты из тех же категорий, что и те, которые покупал клиент
         //Neo4j
@@ -254,7 +256,6 @@ else
         productsVisitedOthers = productsVisitedOthers.Distinct(new ProductEqualityComparer()).ToList();
 
         //Что покупали те, кто смотрел продукт вместе с ним
-
         List<Order> ordersSV = new List<Order>();
 
         foreach (var productId in productIds)
@@ -288,5 +289,19 @@ else
         }
 
         productsBoughtSameVisits = productsBoughtSameVisits.Distinct(new ProductEqualityComparer()).ToList();
+
+        //Get catergory descriptions
+        var categoryIds = (from item in productsBoughtSameVisits.GroupBy(x => x.Category)
+                           select item.Key).ToList();
+        categoryIds.Union(from item in productsVisitedOthers.GroupBy(x => x.Category)
+                          select item.Key);
+        categoryIds.Union(from item in productsSameCategory.GroupBy(x => x.Category)
+                          select item.Key);
+
+        foreach (var item in categoryIds)
+        {
+            if(Int32.TryParse(item, out int id))
+                categories = Categories.GetCategory(id);
+        }
     }
 }
